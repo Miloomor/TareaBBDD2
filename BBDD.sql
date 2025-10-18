@@ -339,23 +339,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Función para verificar si un ingeniero tiene una especialidad específica
-DELIMITER $$
-CREATE FUNCTION f_ingeniero_tiene_especialidad(p_id_ingeniero INT, p_id_topico INT) RETURNS BOOLEAN
-DETERMINISTIC
-BEGIN
-    DECLARE tiene_especialidad BOOLEAN;
-    
-    SELECT EXISTS (
-        SELECT 1 
-        FROM Ingeniero_Topico 
-        WHERE id_ingeniero = p_id_ingeniero AND id_topico = p_id_topico
-    ) INTO tiene_especialidad;
-    
-    RETURN tiene_especialidad;
-END$$
-DELIMITER ;
-
 -- Función para obtener la carga de trabajo promedio de los ingenieros
 DELIMITER $$
 CREATE FUNCTION f_carga_promedio_ingenieros() RETURNS DECIMAL(5,2)
@@ -480,9 +463,9 @@ ORDER BY
 
 -- ========== DATOS INICIALES ==========
 
--- Insertar un usuario administrador (contraseña: admin123)
-INSERT INTO Usuario (rut, nombre, email, password) 
-VALUES ('12345678-9', 'Administrador', 'admin@sistema.com', '$2y$10$rJJGMoUYK/3wyBXKV3eE0.vodnXTxUBmBJe1.YiUFCzJ5Lmnr.wVK');
+Pegar lo que salga de generar_datos.php
+| | | | | | | | | | | | | | | | |
+v v v v v v v v v v v v v v v v v 
 -- =======================================================
 -- INSERTS PARA LA TABLA 'Topico'
 -- =======================================================
