@@ -195,7 +195,7 @@ class DatabaseManager {
             
             // Si la inserción fue exitosa, ejecutamos el procedimiento almacenado para asignación automática
             if ($result) {
-                $this->conn->exec("CALL asignar_ingenieros_funcionalidad(" . $this->conn->lastInsertId() . ")");
+                $this->conn->exec("CALL asignar_ing_funcionalidad(" . $this->conn->lastInsertId() . ")");
             }
             
             return $result;
@@ -357,7 +357,7 @@ class DatabaseManager {
             
             // Si la inserción fue exitosa, ejecutamos el procedimiento almacenado para asignación automática
             if ($result) {
-                $this->conn->exec("CALL asignar_ingenieros_error(" . $this->conn->lastInsertId() . ")");
+                $this->conn->exec("CALL asignar_ing_error(" . $this->conn->lastInsertId() . ")");
             }
             
             return $result;
