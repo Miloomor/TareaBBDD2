@@ -189,7 +189,7 @@ if (isset($_GET['mensaje']) && isset($_GET['tipo'])) {
                                                         <h6>Criterios de aceptación:</h6>
                                                         <ul>
                                                             <?php 
-                                                            $criterios = json_decode($f['criterios'], true);
+                                                            $criterios = $db->getCriteriosFuncionalidad($f['id_funcionalidad']);
                                                             if (is_array($criterios)) {
                                                                 foreach ($criterios as $criterio) {
                                                                     echo "<li>" . htmlspecialchars($criterio) . "</li>";
@@ -253,7 +253,7 @@ if (isset($_GET['mensaje']) && isset($_GET['tipo'])) {
                                                                 <label class="form-label">Criterios de aceptación</label>
                                                                 <div id="criterios-container-edit-<?php echo $f['id_funcionalidad']; ?>">
                                                                     <?php 
-                                                                    $criterios = json_decode($f['criterios'], true);
+                                                                    $criterios = $db->getCriteriosFuncionalidad($f['id_funcionalidad']);
                                                                     if (is_array($criterios)) {
                                                                         foreach ($criterios as $index => $criterio) {
                                                                             ?>

@@ -5,6 +5,7 @@ USE bdzeropressure;
 -- Eliminar tablas si existen (para reiniciar)
 DROP TABLE IF EXISTS Asignacion_Error;
 DROP TABLE IF EXISTS Asignacion_Funcionalidad;
+DROP TABLE IF EXISTS Criterios_Funcionalidad;
 DROP TABLE IF EXISTS Ingeniero_Topico;
 DROP TABLE IF EXISTS Solicitud_Error;
 DROP TABLE IF EXISTS Solicitud_Funcionalidad;
@@ -42,7 +43,6 @@ CREATE TABLE Solicitud_Funcionalidad (
     titulo VARCHAR(255) NOT NULL,
     ambiente ENUM('Web', 'Movil') NOT NULL,
     resumen TEXT NOT NULL,
-    criterios JSON NOT NULL,
     id_usuario INT NOT NULL,
     id_topico INT NOT NULL,
     fecha_publicacion DATE NOT NULL,
@@ -51,6 +51,16 @@ CREATE TABLE Solicitud_Funcionalidad (
     observaciones TEXT NULL,
     FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
     FOREIGN KEY (id_topico) REFERENCES Topico(id_topico)
+);
+
+-- Tabla de Criterios de Funcionalidad (normalización)
+CREATE TABLE Criterios_Funcionalidad (
+    id_criterio INT AUTO_INCREMENT PRIMARY KEY,
+    id_funcionalidad INT NOT NULL,
+    descripcion TEXT NOT NULL,
+    orden INT NOT NULL DEFAULT 1,
+    FOREIGN KEY (id_funcionalidad) REFERENCES Solicitud_Funcionalidad(id_funcionalidad) ON DELETE CASCADE,
+    INDEX idx_funcionalidad (id_funcionalidad)
 );
 
 -- Tabla de Solicitudes de Error
@@ -295,10 +305,13 @@ CREATE TRIGGER tr_verificar_criterios_funcionalidad
 BEFORE INSERT ON Solicitud_Funcionalidad
 FOR EACH ROW
 BEGIN
-    IF JSON_LENGTH(NEW.criterios) < 3 THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'La solicitud de funcionalidad debe tener al menos 3 criterios de aceptación';
-    END IF;
+    DECLARE num_criterios INT DEFAULT 0;
+    
+    -- Contar criterios asociados a esta funcionalidad
+    -- Nota: Este trigger se ejecuta antes del INSERT, por lo que debemos verificar
+    -- después de la inserción usando otro mecanismo o asumiendo validación en aplicación
+    -- Por ahora, deshabilitamos la verificación automática aquí
+    -- y la manejamos a nivel de aplicación
 END$$
 DELIMITER ;
 
@@ -536,35 +549,90 @@ INSERT INTO ingeniero_topico (id_ingeniero, id_topico) VALUES (8, 3);
 -- =======================================================
 -- INSERTS Y ASIGNACIONES PARA 'solicitud_funcionalidad' (15 registros)
 -- =======================================================
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Soluta aperiam et quia facere et molestias velit dolor qui error et quo magnam dicta ipsam qui non tempora quia ut.', 'Web', 'Pariatur nihil qui quo amet est sapiente debitis. Ut id dolorem expedita id ut tenetur.', '[\"Aperiam quisquam quia autem quo reprehenderit.\",\"Voluptatem porro rerum ea a in rem.\",\"Veritatis quod atque at aut deleniti.\"]', 17, 10);   
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Soluta aperiam et quia facere et molestias velit dolor qui error et quo magnam dicta ipsam qui non tempora quia ut.', 'Web', 'Pariatur nihil qui quo amet est sapiente debitis. Ut id dolorem expedita id ut tenetur.', 17, 10);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (1, 'Aperiam quisquam quia autem quo reprehenderit.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (1, 'Voluptatem porro rerum ea a in rem.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (1, 'Veritatis quod atque at aut deleniti.', 3);
 CALL asignar_ing_funcionalidad(1);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Nobis et sit hic quae ex consequatur ut non dolorum corporis ut quidem et atque quisquam est et quos quo consequatur.', 'Web', 'Qui at aut eum unde aliquid dolorem. Sint cupiditate sed dicta quia amet esse qui.', '[\"Architecto et suscipit consequatur nemo dolor.\",\"Et aliquid reprehenderit impedit fugit delectus.\",\"Eligendi et et ut minima sit dignissimos accusantium.\",\"Voluptas consectetur sed hic quis.\"]', 10, 9);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Nobis et sit hic quae ex consequatur ut non dolorum corporis ut quidem et atque quisquam est et quos quo consequatur.', 'Web', 'Qui at aut eum unde aliquid dolorem. Sint cupiditate sed dicta quia amet esse qui.', 10, 9);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (2, 'Architecto et suscipit consequatur nemo dolor.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (2, 'Et aliquid reprehenderit impedit fugit delectus.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (2, 'Eligendi et et ut minima sit dignissimos accusantium.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (2, 'Voluptas consectetur sed hic quis.', 4);
 CALL asignar_ing_funcionalidad(2);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Voluptatem facilis fugiat dolores quas itaque qui quia sequi corrupti magni voluptas doloremque illo laboriosam est qui officia alias commodi vel.', 'Web', 'Qui rerum qui enim distinctio. Non deserunt veritatis vitae quia maiores.', '[\"Quod earum et eligendi dolor doloribus dolor.\",\"Quae assumenda voluptatem et consequatur sapiente repellendus.\",\"Reiciendis autem consequatur eos expedita consequatur impedit.\",\"Occaecati vero numquam eaque non et illum.\"]', 7, 5);        
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Voluptatem facilis fugiat dolores quas itaque qui quia sequi corrupti magni voluptas doloremque illo laboriosam est qui officia alias commodi vel.', 'Web', 'Qui rerum qui enim distinctio. Non deserunt veritatis vitae quia maiores.', 7, 5);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (3, 'Quod earum et eligendi dolor doloribus dolor.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (3, 'Quae assumenda voluptatem et consequatur sapiente repellendus.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (3, 'Reiciendis autem consequatur eos expedita consequatur impedit.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (3, 'Occaecati vero numquam eaque non et illum.', 4);
 CALL asignar_ing_funcionalidad(3);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Repellendus non dolores praesentium culpa qui quo sint architecto quibusdam non optio sit architecto quasi doloribus voluptatem reiciendis magnam laborum occaecati.', 'Web', 'Necessitatibus laboriosam iusto officia cupiditate rerum. Consequatur in tempora a eos dolore porro.', '[\"Aliquid quis atque consequuntur quibusdam assumenda.\",\"Praesentium nemo voluptatem asperiores sapiente alias.\",\"Sed molestias aut rerum exercitationem et a.\"]', 20, 6);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Repellendus non dolores praesentium culpa qui quo sint architecto quibusdam non optio sit architecto quasi doloribus voluptatem reiciendis magnam laborum occaecati.', 'Web', 'Necessitatibus laboriosam iusto officia cupiditate rerum. Consequatur in tempora a eos dolore porro.', 20, 6);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (4, 'Aliquid quis atque consequuntur quibusdam assumenda.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (4, 'Praesentium nemo voluptatem asperiores sapiente alias.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (4, 'Sed molestias aut rerum exercitationem et a.', 3);
 CALL asignar_ing_funcionalidad(4);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Consequatur hic expedita ad quia qui nihil itaque quia ea voluptas rerum dignissimos est ut reprehenderit natus nihil sit quo ea.', 'Móvil', 'Omnis qui libero quo asperiores id. Eos voluptatem occaecati quaerat aut consequatur.', '[\"Iure iusto in voluptatum animi quaerat.\",\"Sunt laboriosam sunt omnis tenetur consectetur ea.\",\"Explicabo dolorem assumenda reprehenderit.\"]', 7, 7);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Consequatur hic expedita ad quia qui nihil itaque quia ea voluptas rerum dignissimos est ut reprehenderit natus nihil sit quo ea.', 'Móvil', 'Omnis qui libero quo asperiores id. Eos voluptatem occaecati quaerat aut consequatur.', 7, 7);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (5, 'Iure iusto in voluptatum animi quaerat.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (5, 'Sunt laboriosam sunt omnis tenetur consectetur ea.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (5, 'Explicabo dolorem assumenda reprehenderit.', 3);
 CALL asignar_ing_funcionalidad(5);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Consequatur nesciunt eum libero suscipit consequatur non quis exercitationem aut omnis magnam qui dolor facere corporis delectus fugiat nihil dolorem quia.', 'Móvil', 'Est et eius quia similique et. Autem natus aliquam in explicabo deleniti fuga cumque a. Facilis omnis optio quis est fugit.', '[\"Perferendis veritatis velit impedit non.\",\"Est odit veniam nihil vitae.\",\"Ea recusandae qui rerum officiis.\",\"Mollitia quis eaque tempora.\",\"Fugit ratione cumque quia aliquid sequi velit omnis a.\"]', 10, 1);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Consequatur nesciunt eum libero suscipit consequatur non quis exercitationem aut omnis magnam qui dolor facere corporis delectus fugiat nihil dolorem quia.', 'Móvil', 'Est et eius quia similique et. Autem natus aliquam in explicabo deleniti fuga cumque a. Facilis omnis optio quis est fugit.', 10, 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (6, 'Perferendis veritatis velit impedit non.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (6, 'Est odit veniam nihil vitae.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (6, 'Ea recusandae qui rerum officiis.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (6, 'Mollitia quis eaque tempora.', 4);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (6, 'Fugit ratione cumque quia aliquid sequi velit omnis a.', 5);
 CALL asignar_ing_funcionalidad(6);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Quis qui quam molestiae molestias pariatur alias blanditiis blanditiis repudiandae sint corporis voluptatem non omnis quidem voluptatum suscipit blanditiis ut quod.', 'Móvil', 'Illum doloremque repudiandae ex nam nostrum quis. Omnis sunt dolores libero ut voluptatum.', '[\"Provident et dolorum saepe eum laudantium.\",\"Nihil id molestiae magnam quod et.\",\"Molestias aut temporibus nulla assumenda repudiandae.\",\"Velit rem quos neque vitae aut totam.\"]', 3, 5);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Quis qui quam molestiae molestias pariatur alias blanditiis blanditiis repudiandae sint corporis voluptatem non omnis quidem voluptatum suscipit blanditiis ut quod.', 'Móvil', 'Illum doloremque repudiandae ex nam nostrum quis. Omnis sunt dolores libero ut voluptatum.', 3, 5);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (7, 'Provident et dolorum saepe eum laudantium.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (7, 'Nihil id molestiae magnam quod et.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (7, 'Molestias aut temporibus nulla assumenda repudiandae.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (7, 'Velit rem quos neque vitae aut totam.', 4);
 CALL asignar_ing_funcionalidad(7);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Quod voluptatem sint aut voluptas ut alias nesciunt cum cumque nam quasi nemo possimus et voluptatem eos facilis libero accusantium aut.', 'Móvil', 'Consequuntur quaerat iste odio et praesentium vitae exercitationem corporis. Quis expedita quidem consequatur facilis occaecati.', '[\"Illo molestiae cumque ut aut ut voluptatibus architecto.\",\"Vitae itaque ad maiores at.\",\"Expedita odio et eum nulla et.\",\"Omnis cumque sapiente et.\"]', 8, 5);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Quod voluptatem sint aut voluptas ut alias nesciunt cum cumque nam quasi nemo possimus et voluptatem eos facilis libero accusantium aut.', 'Móvil', 'Consequuntur quaerat iste odio et praesentium vitae exercitationem corporis. Quis expedita quidem consequatur facilis occaecati.', 8, 5);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (8, 'Illo molestiae cumque ut aut ut voluptatibus architecto.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (8, 'Vitae itaque ad maiores at.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (8, 'Expedita odio et eum nulla et.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (8, 'Omnis cumque sapiente et.', 4);
 CALL asignar_ing_funcionalidad(8);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Assumenda iure rerum explicabo quo officiis velit maiores modi illo dolor architecto iure eos culpa aperiam qui pariatur eum est eum.', 'Móvil', 'Possimus illo id amet et minima cum. Labore ut incidunt quis sint sit. In nam delectus sunt vero est laboriosam minima.', '[\"Aspernatur qui nulla vel nemo non placeat perspiciatis.\",\"Accusamus voluptatem et ut alias sit.\",\"Eos quo autem vel aut enim.\"]', 1, 5);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Assumenda iure rerum explicabo quo officiis velit maiores modi illo dolor architecto iure eos culpa aperiam qui pariatur eum est eum.', 'Móvil', 'Possimus illo id amet et minima cum. Labore ut incidunt quis sint sit. In nam delectus sunt vero est laboriosam minima.', 1, 5);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (9, 'Aspernatur qui nulla vel nemo non placeat perspiciatis.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (9, 'Accusamus voluptatem et ut alias sit.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (9, 'Eos quo autem vel aut enim.', 3);
 CALL asignar_ing_funcionalidad(9);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Vitae ut dicta quo ut voluptatem beatae in et odit rerum consequatur ea unde soluta ducimus voluptates hic magni eligendi dolorum.', 'Móvil', 'Dolore voluptatem veniam nisi. Unde qui vero illum ad. Quia vel asperiores mollitia autem sint.', '[\"Excepturi dicta voluptates inventore quod.\",\"Accusantium reprehenderit id et.\",\"Delectus blanditiis molestiae delectus nobis eligendi corrupti nulla.\",\"Qui unde reprehenderit perspiciatis ipsa placeat consequuntur eius.\"]', 4, 2); 
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Vitae ut dicta quo ut voluptatem beatae in et odit rerum consequatur ea unde soluta ducimus voluptates hic magni eligendi dolorum.', 'Móvil', 'Dolore voluptatem veniam nisi. Unde qui vero illum ad. Quia vel asperiores mollitia autem sint.', 4, 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (10, 'Excepturi dicta voluptates inventore quod.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (10, 'Accusantium reprehenderit id et.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (10, 'Delectus blanditiis molestiae delectus nobis eligendi corrupti nulla.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (10, 'Qui unde reprehenderit perspiciatis ipsa placeat consequuntur eius.', 4); 
 CALL asignar_ing_funcionalidad(10);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Error perferendis nobis quia et ea eligendi reprehenderit voluptatem id qui odio quasi et et ut nostrum rerum sint sed sint.', 'Móvil', 'Velit porro incidunt ut sunt et. Voluptas optio magni et accusamus et ad.', '[\"Tenetur omnis ex aliquam.\",\"Voluptates dignissimos vitae quo ut.\",\"Repudiandae fuga quis corrupti aut doloremque non.\"]', 20, 10);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Error perferendis nobis quia et ea eligendi reprehenderit voluptatem id qui odio quasi et et ut nostrum rerum sint sed sint.', 'Móvil', 'Velit porro incidunt ut sunt et. Voluptas optio magni et accusamus et ad.', 20, 10);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (11, 'Tenetur omnis ex aliquam.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (11, 'Voluptates dignissimos vitae quo ut.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (11, 'Repudiandae fuga quis corrupti aut doloremque non.', 3);
 CALL asignar_ing_funcionalidad(11);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Delectus optio consequatur facere aut id ducimus neque quaerat et exercitationem nisi nulla est autem sed ut non nemo repellendus et.', 'Web', 'Earum quae non quaerat maxime alias ex. Aperiam reprehenderit reiciendis consequuntur mollitia sequi veniam. Eligendi pariatur qui molestias dolore.', '[\"Quidem necessitatibus perspiciatis ipsam officiis.\",\"In quasi voluptatem rem dignissimos qui non tempore.\",\"Error ea aut quos ut et.\",\"Accusamus dolorem nisi cum delectus consequatur quas.\",\"Atque quaerat harum eligendi soluta at quaerat.\"]', 3, 9);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Delectus optio consequatur facere aut id ducimus neque quaerat et exercitationem nisi nulla est autem sed ut non nemo repellendus et.', 'Web', 'Earum quae non quaerat maxime alias ex. Aperiam reprehenderit reiciendis consequuntur mollitia sequi veniam. Eligendi pariatur qui molestias dolore.', 3, 9);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (12, 'Quidem necessitatibus perspiciatis ipsam officiis.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (12, 'In quasi voluptatem rem dignissimos qui non tempore.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (12, 'Error ea aut quos ut et.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (12, 'Accusamus dolorem nisi cum delectus consequatur quas.', 4);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (12, 'Atque quaerat harum eligendi soluta at quaerat.', 5);
 CALL asignar_ing_funcionalidad(12);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Quia iure illum aut laudantium et soluta nisi deleniti et et incidunt deleniti nam tenetur est dignissimos porro odit reprehenderit pariatur.', 'Web', 'Nemo error suscipit explicabo cumque autem. Possimus nihil vitae doloribus et ad repudiandae. Ullam quis quo magni ea.', '[\"Quia magni aperiam illo quae perspiciatis velit incidunt et.\",\"Rerum voluptate iusto est culpa ea dolore.\",\"Ut sit iste rerum dignissimos.\",\"Dicta aperiam natus totam possimus.\"]', 11, 6);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Quia iure illum aut laudantium et soluta nisi deleniti et et incidunt deleniti nam tenetur est dignissimos porro odit reprehenderit pariatur.', 'Web', 'Nemo error suscipit explicabo cumque autem. Possimus nihil vitae doloribus et ad repudiandae. Ullam quis quo magni ea.', 11, 6);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (13, 'Quia magni aperiam illo quae perspiciatis velit incidunt et.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (13, 'Rerum voluptate iusto est culpa ea dolore.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (13, 'Ut sit iste rerum dignissimos.', 3);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (13, 'Dicta aperiam natus totam possimus.', 4);
 CALL asignar_ing_funcionalidad(13);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Non consequatur doloribus illum sequi ipsum veritatis accusamus dolor quia eum occaecati excepturi necessitatibus harum unde dicta necessitatibus in in quia.', 'Móvil', 'Et voluptate non enim inventore est. Est omnis minus eos eum non consectetur.', '[\"Eius quod iure sit cum doloribus similique aut.\",\"Atque laborum reiciendis pariatur dolores eligendi pariatur.\",\"Ut quibusdam exercitationem recusandae totam rerum quisquam.\"]', 8, 10);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Non consequatur doloribus illum sequi ipsum veritatis accusamus dolor quia eum occaecati excepturi necessitatibus harum unde dicta necessitatibus in in quia.', 'Móvil', 'Et voluptate non enim inventore est. Est omnis minus eos eum non consectetur.', 8, 10);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (14, 'Eius quod iure sit cum doloribus similique aut.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (14, 'Atque laborum reiciendis pariatur dolores eligendi pariatur.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (14, 'Ut quibusdam exercitationem recusandae totam rerum quisquam.', 3);
 CALL asignar_ing_funcionalidad(14);
-INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('Quibusdam incidunt autem sequi tempore ab iure minus facere maiores et necessitatibus et quo dolor iusto recusandae recusandae fuga sapiente nemo.', 'Web', 'Pariatur harum cupiditate libero odit fuga et. Doloribus deleniti sint ut sed sapiente veniam. Id illo voluptatibus quia.', '[\"Quia officiis architecto voluptatem dolorem.\",\"Dignissimos voluptas in minima sint.\",\"Doloremque debitis ipsam dolores et odio sint molestias rerum.\"]', 5, 9);
+INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('Quibusdam incidunt autem sequi tempore ab iure minus facere maiores et necessitatibus et quo dolor iusto recusandae recusandae fuga sapiente nemo.', 'Web', 'Pariatur harum cupiditate libero odit fuga et. Doloribus deleniti sint ut sed sapiente veniam. Id illo voluptatibus quia.', 5, 9);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (15, 'Quia officiis architecto voluptatem dolorem.', 1);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (15, 'Dignissimos voluptas in minima sint.', 2);
+INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES (15, 'Doloremque debitis ipsam dolores et odio sint molestias rerum.', 3);
 CALL asignar_ing_funcionalidad(15);
 
 -- =======================================================

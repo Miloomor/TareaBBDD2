@@ -235,7 +235,7 @@ if (isset($_GET['mensaje']) && isset($_GET['tipo'])) {
                                                             <h6>Criterios de aceptación:</h6>
                                                             <ul>
                                                                 <?php 
-                                                                $criterios = json_decode($a['criterios'], true);
+                                                                $criterios = $db->getCriteriosFuncionalidad($a['id_funcionalidad']);
                                                                 if (is_array($criterios)) {
                                                                     foreach ($criterios as $criterio) {
                                                                         echo "<li>" . htmlspecialchars($criterio) . "</li>";
@@ -455,7 +455,7 @@ if (isset($_GET['mensaje']) && isset($_GET['tipo'])) {
                                                         <h6>Criterios de aceptación:</h6>
                                                         <ul>
                                                             <?php 
-                                                            $criterios = json_decode($f['criterios'], true);
+                                                            $criterios = $db->getCriteriosFuncionalidad($f['id_funcionalidad']);
                                                             if (is_array($criterios)) {
                                                                 foreach ($criterios as $criterio) {
                                                                     echo "<li>" . htmlspecialchars($criterio) . "</li>";

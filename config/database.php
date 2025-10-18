@@ -171,6 +171,54 @@ class DatabaseManager {
     }
     
     /**
+     * Obtiene los criterios de una funcionalidad específica
+     * 
+     * @param int $id_funcionalidad ID de la funcionalidad
+     * @return array Lista de criterios ordenados
+     */
+    public function getCriteriosFuncionalidad($id_funcionalidad) {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT descripcion 
+                FROM Criterios_Funcionalidad 
+                WHERE id_funcionalidad = :id_funcionalidad
+                ORDER BY orden ASC
+            ");
+            $stmt->bindParam(':id_funcionalidad', $id_funcionalidad);
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Error obteniendo criterios: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Verifica si un usuario es propietario de una funcionalidad
+     * 
+     * @param int $id_funcionalidad ID de la funcionalidad
+     * @param int $id_usuario ID del usuario
+     * @return bool True si el usuario es propietario, false en caso contrario
+     */
+    public function verificarPropietarioFuncionalidad($id_funcionalidad, $id_usuario) {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT COUNT(*) 
+                FROM Solicitud_Funcionalidad 
+                WHERE id_funcionalidad = :id_funcionalidad AND id_usuario = :id_usuario
+            ");
+            $stmt->bindParam(':id_funcionalidad', $id_funcionalidad);
+            $stmt->bindParam(':id_usuario', $id_usuario);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log("Error verificando propietario: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Crea una nueva solicitud de funcionalidad
      * 
      * @param string $titulo Título de la funcionalidad
@@ -183,30 +231,53 @@ class DatabaseManager {
      */
     public function createFuncionalidad($titulo, $ambiente, $resumen, $criterios, $id_usuario, $id_topico) {
         try {
+            // Iniciamos una transacción
+            $this->conn->beginTransaction();
+            
             $stmt = $this->conn->prepare("
                 INSERT INTO Solicitud_Funcionalidad 
-                (titulo, ambiente, resumen, criterios, id_usuario, id_topico, fecha_publicacion, estado)
-                VALUES (:titulo, :ambiente, :resumen, :criterios, :id_usuario, :id_topico, CURRENT_DATE, 'Abierto')
+                (titulo, ambiente, resumen, id_usuario, id_topico, fecha_publicacion, estado)
+                VALUES (:titulo, :ambiente, :resumen, :id_usuario, :id_topico, CURRENT_DATE, 'Abierto')
             ");
-            
-            $criterios_json = json_encode($criterios);
             
             $stmt->bindParam(':titulo', $titulo);
             $stmt->bindParam(':ambiente', $ambiente);
             $stmt->bindParam(':resumen', $resumen);
-            $stmt->bindParam(':criterios', $criterios_json);
             $stmt->bindParam(':id_usuario', $id_usuario);
             $stmt->bindParam(':id_topico', $id_topico);
             
             $result = $stmt->execute();
             
-            // Si la inserción fue exitosa, ejecutamos el procedimiento almacenado para asignación automática
             if ($result) {
-                $this->conn->exec("CALL asignar_ing_funcionalidad(" . $this->conn->lastInsertId() . ")");
+                $id_funcionalidad = $this->conn->lastInsertId();
+                
+                // Insertamos los criterios en la tabla normalizada
+                $stmt_criterios = $this->conn->prepare("
+                    INSERT INTO Criterios_Funcionalidad (id_funcionalidad, descripcion, orden)
+                    VALUES (:id_funcionalidad, :descripcion, :orden)
+                ");
+                
+                foreach ($criterios as $index => $criterio) {
+                    $orden = $index + 1;
+                    $stmt_criterios->bindParam(':id_funcionalidad', $id_funcionalidad);
+                    $stmt_criterios->bindParam(':descripcion', $criterio);
+                    $stmt_criterios->bindParam(':orden', $orden);
+                    $stmt_criterios->execute();
+                }
+                
+                // Confirmamos la transacción
+                $this->conn->commit();
+                
+                // Ejecutamos el procedimiento almacenado para asignación automática
+                $this->conn->exec("CALL asignar_ing_funcionalidad(" . $id_funcionalidad . ")");
+                
+                return true;
+            } else {
+                $this->conn->rollBack();
+                return false;
             }
-            
-            return $result;
         } catch (PDOException $e) {
+            $this->conn->rollBack();
             error_log("Error creando funcionalidad: " . $e->getMessage());
             return false;
         }
@@ -235,24 +306,56 @@ class DatabaseManager {
                 return false; // No se puede modificar si está en progreso
             }
             
+            // Iniciamos una transacción
+            $this->conn->beginTransaction();
+            
             $stmt = $this->conn->prepare("
                 UPDATE Solicitud_Funcionalidad 
                 SET titulo = :titulo, ambiente = :ambiente, resumen = :resumen, 
-                    criterios = :criterios, id_topico = :id_topico
+                    id_topico = :id_topico
                 WHERE id_funcionalidad = :id_funcionalidad
             ");
-            
-            $criterios_json = json_encode($criterios);
             
             $stmt->bindParam(':id_funcionalidad', $id_funcionalidad);
             $stmt->bindParam(':titulo', $titulo);
             $stmt->bindParam(':ambiente', $ambiente);
             $stmt->bindParam(':resumen', $resumen);
-            $stmt->bindParam(':criterios', $criterios_json);
             $stmt->bindParam(':id_topico', $id_topico);
             
-            return $stmt->execute();
+            $result = $stmt->execute();
+            
+            if ($result) {
+                // Eliminamos los criterios antiguos
+                $delete_stmt = $this->conn->prepare("
+                    DELETE FROM Criterios_Funcionalidad 
+                    WHERE id_funcionalidad = :id_funcionalidad
+                ");
+                $delete_stmt->bindParam(':id_funcionalidad', $id_funcionalidad);
+                $delete_stmt->execute();
+                
+                // Insertamos los nuevos criterios
+                $stmt_criterios = $this->conn->prepare("
+                    INSERT INTO Criterios_Funcionalidad (id_funcionalidad, descripcion, orden)
+                    VALUES (:id_funcionalidad, :descripcion, :orden)
+                ");
+                
+                foreach ($criterios as $index => $criterio) {
+                    $orden = $index + 1;
+                    $stmt_criterios->bindParam(':id_funcionalidad', $id_funcionalidad);
+                    $stmt_criterios->bindParam(':descripcion', $criterio);
+                    $stmt_criterios->bindParam(':orden', $orden);
+                    $stmt_criterios->execute();
+                }
+                
+                // Confirmamos la transacción
+                $this->conn->commit();
+                return true;
+            } else {
+                $this->conn->rollBack();
+                return false;
+            }
         } catch (PDOException $e) {
+            $this->conn->rollBack();
             error_log("Error actualizando funcionalidad: " . $e->getMessage());
             return false;
         }
