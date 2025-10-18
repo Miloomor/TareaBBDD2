@@ -53,7 +53,7 @@ CREATE TABLE Solicitud_Funcionalidad (
     FOREIGN KEY (id_topico) REFERENCES Topico(id_topico)
 );
 
--- Tabla de Criterios de Funcionalidad (normalización)
+-- Tabla de Criterios de Funcionalidad
 CREATE TABLE Criterios_Funcionalidad (
     id_criterio INT AUTO_INCREMENT PRIMARY KEY,
     id_funcionalidad INT NOT NULL,
