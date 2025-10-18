@@ -40,7 +40,7 @@ $topicos = $db->getTopicos();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Solicitudes</title>
+    <title>ZeroPressure</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/styles.css" rel="stylesheet">
 </head>
@@ -53,9 +53,6 @@ $topicos = $db->getTopicos();
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="index.php">Inicio</a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="busqueda/avanzada.php">Búsqueda Avanzada</a>
                     </li>
@@ -78,9 +75,9 @@ $topicos = $db->getTopicos();
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-8 text-center">
-                <h1 class="mb-4">Sistema de Gestión de Solicitudes</h1>
+                <h1 class="mb-4">ZeroPressure</h1>
                 <p class="lead mb-5">
-                    Plataforma para gestionar solicitudes de funcionalidades y reportes de errores en el desarrollo de software.
+                    Gestión de solicitudes de funcionalidades y solicitudes de error.
                 </p>
                 
                 <!-- Formulario de búsqueda simple -->
@@ -177,6 +174,11 @@ $topicos = $db->getTopicos();
         <?php endif; ?>
         
     </div>
+    <footer class="bg-light text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-0">ZeroPressure &copy; <?php echo date('Y'); ?></p>
+        </div>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/main.js"></script>
 </body>

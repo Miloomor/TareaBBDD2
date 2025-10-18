@@ -52,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($error)) {
             $resultado = $db->registerUser($rut, $nombre, $email, $password, $rol);
             
-            if ($resultado) {
+            if ($resultado !== false) {
                 // Si es ingeniero, registrar sus especialidades
                 if ($rol === 'ingeniero' && isset($_POST['especialidades'])) {
-                    $id_ingeniero = $db->getLastInsertId();
+                    $id_ingeniero = $resultado; // El ID ya viene en el resultado
                     foreach ($_POST['especialidades'] as $topico_id) {
                         $db->addEspecialidadIngeniero($id_ingeniero, $topico_id);
                     }
@@ -90,7 +90,7 @@ function validarRut($rut) {
             <div class="col-md-8">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">Registro de Usuario</h4>
+                        <h4 class="mb-0">Registrarse</h4>
                     </div>
                     <div class="card-body">
                         <?php if (!empty($error)): ?>

@@ -108,7 +108,14 @@ class DatabaseManager {
             $stmt->bindParam(':email', $email);
             $stmt->bindParam(':password', $hashed_password);
             
-            return $stmt->execute();
+            $result = $stmt->execute();
+            
+            if ($result) {
+                // Si la inserción fue exitosa, devolvemos el ID insertado
+                return $this->conn->lastInsertId();
+            } else {
+                return false;
+            }
         } catch (PDOException $e) {
             error_log("Error en registro: " . $e->getMessage());
             return false;
@@ -516,6 +523,37 @@ class DatabaseManager {
         }
     }
     
+    /**
+     * Obtiene el ID del último registro insertado
+     * 
+     * @return string El ID del último registro insertado
+     */
+    public function getLastInsertId() {
+        return $this->conn->lastInsertId();
+    }
+    
+    /**
+     * Agrega una especialidad (tópico) a un ingeniero
+     * 
+     * @param int $id_ingeniero ID del ingeniero
+     * @param int $id_topico ID del tópico/especialidad
+     * @return bool True si la operación fue exitosa, false en caso contrario
+     */
+    public function addEspecialidadIngeniero($id_ingeniero, $id_topico) {
+        try {
+            $stmt = $this->conn->prepare("
+                INSERT INTO Ingeniero_Topico (id_ingeniero, id_topico)
+                VALUES (:id_ingeniero, :id_topico)
+            ");
+            $stmt->bindParam(':id_ingeniero', $id_ingeniero);
+            $stmt->bindParam(':id_topico', $id_topico);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error agregando especialidad: " . $e->getMessage());
+            return false;
+        }
+    }
+    
     // ===== BÚSQUEDAS =====
     
     /**
@@ -701,7 +739,7 @@ class DatabaseManager {
     /**
      * Ejecuta la asignación automática para todas las solicitudes pendientes
      * 
-     * @return bool True si la ejecución fue exitosa
+     * @return bool True si la ejecucion fue exitosa
      */
     public function ejecutarAsignacionAutomatica() {
         try {

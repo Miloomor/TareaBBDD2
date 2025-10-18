@@ -46,7 +46,7 @@ $topicos = $db->getTopicos();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Búsqueda Avanzada - Sistema de Gestión de Solicitudes</title>
+    <title>Búsqueda Avanzada</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="../assets/css/styles.css" rel="stylesheet">
@@ -273,7 +273,7 @@ $topicos = $db->getTopicos();
     
     <footer class="bg-light text-center py-4 mt-5">
         <div class="container">
-            <p class="mb-0">Sistema de Gestión de Solicitudes &copy; <?php echo date('Y'); ?></p>
+            <p class="mb-0">ZeroPressure &copy; <?php echo date('Y'); ?></p>
         </div>
     </footer>
 
