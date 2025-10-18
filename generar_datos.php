@@ -128,9 +128,9 @@ for ($i = 1; $i <= $cantidad_solicitudes_funcionalidad; $i++) {
     $ambiente = $faker->randomElement(['Web', 'Móvil']);
     $resumen = $faker->paragraph(2);
     
-    // Generar criterios en formato JSON (entre 3 y 5 criterios)
-    $criterios_array = $faker->sentences($faker->numberBetween(3, 5));
-    $criterios_json = json_encode($criterios_array, JSON_UNESCAPED_UNICODE);
+    // Generar criterios (entre 3 y 5 criterios)
+    $num_criterios = $faker->numberBetween(3, 5);
+    $criterios_array = $faker->sentences($num_criterios);
     
     // Asignar a un usuario y tópico aleatorio
     $id_usuario = $faker->numberBetween(1, $cantidad_usuarios);
@@ -139,9 +139,16 @@ for ($i = 1; $i <= $cantidad_solicitudes_funcionalidad; $i++) {
     // Escapar datos para la consulta SQL
     $titulo_escapado = addslashes($titulo);
     $resumen_escapado = addslashes($resumen);
-    $criterios_json_escapado = addslashes($criterios_json);
 
-    echo "INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, criterios, id_usuario, id_topico) VALUES ('$titulo_escapado', '$ambiente', '$resumen_escapado', '$criterios_json_escapado', $id_usuario, $id_topico);\n";
+    echo "INSERT INTO solicitud_funcionalidad (titulo, ambiente, resumen, id_usuario, id_topico) VALUES ('$titulo_escapado', '$ambiente', '$resumen_escapado', $id_usuario, $id_topico);\n";
+    
+    // Insertar criterios en la tabla normalizada
+    foreach ($criterios_array as $orden => $criterio) {
+        $criterio_escapado = addslashes($criterio);
+        $orden_num = $orden + 1;
+        echo "INSERT INTO criterios_funcionalidad (id_funcionalidad, descripcion, orden) VALUES ($i, '$criterio_escapado', $orden_num);\n";
+    }
+    
     echo "CALL asignar_ing_funcionalidad($i);\n";
 }
 echo "\n";

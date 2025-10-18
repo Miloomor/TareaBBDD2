@@ -147,10 +147,12 @@ if (isset($_GET['query']) && !empty($_GET['query'])) {
                                                         <h6>Criterios de aceptación:</h6>
                                                         <ul>
                                                             <?php 
-                                                            $criterios = json_decode($item['criterios'], true);
-                                                            if (is_array($criterios)) {
-                                                                foreach ($criterios as $criterio) {
-                                                                    echo "<li>" . htmlspecialchars($criterio) . "</li>";
+                                                            if ($item['tipo'] === 'funcionalidad') {
+                                                                $criterios = $db->getCriteriosFuncionalidad($item['id_funcionalidad']);
+                                                                if (is_array($criterios)) {
+                                                                    foreach ($criterios as $criterio) {
+                                                                        echo "<li>" . htmlspecialchars($criterio) . "</li>";
+                                                                    }
                                                                 }
                                                             }
                                                             ?>
