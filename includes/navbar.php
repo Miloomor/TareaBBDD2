@@ -20,7 +20,11 @@ if ($depth > 1) {
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $base_path; ?>index.php">Inicio</a>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a class="nav-link" href="<?php echo $base_path; ?>inicio.php">Inicio</a>
+                    <?php else: ?>
+                        <a class="nav-link" href="<?php echo $base_path; ?>index.php">Inicio</a>
+                    <?php endif; ?>
                 </li>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <?php if ($_SESSION['rol'] === 'usuario'): ?>
