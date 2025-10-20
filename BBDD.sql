@@ -475,10 +475,7 @@ ORDER BY
     total_asignaciones DESC;
 
 -- ========== DATOS INICIALES ==========
-
-Pegar lo que salga de generar_datos.php
-| | | | | | | | | | | | | | | | |
-v v v v v v v v v v v v v v v v v 
+-- Pegar lo que salga de generar_datos.php
 -- =======================================================
 -- INSERTS PARA LA TABLA 'Topico'
 -- =======================================================

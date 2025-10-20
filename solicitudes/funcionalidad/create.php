@@ -21,6 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $topico = $_POST['topico'];
     $criterios = isset($_POST['criterios']) ? $_POST['criterios'] : [];
     
+    // Filtrar criterios vacíos
+    $criterios = array_filter($criterios, function($criterio) {
+        return !empty(trim($criterio));
+    });
+    
     // Validaciones
     if (empty($titulo) || empty($ambiente) || empty($resumen) || empty($topico) || empty($criterios)) {
         $mensaje = 'Todos los campos son obligatorios.';

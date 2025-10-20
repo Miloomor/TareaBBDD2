@@ -231,6 +231,20 @@ class DatabaseManager {
      */
     public function createFuncionalidad($titulo, $ambiente, $resumen, $criterios, $id_usuario, $id_topico) {
         try {
+            // Validar que hay al menos 3 criterios
+            if (count($criterios) < 3) {
+                error_log("Error: Se requieren al menos 3 criterios de aceptación.");
+                return false;
+            }
+            
+            // Validar que los criterios no estén vacíos
+            foreach ($criterios as $criterio) {
+                if (empty(trim($criterio))) {
+                    error_log("Error: Los criterios de aceptación no pueden estar vacíos.");
+                    return false;
+                }
+            }
+            
             // Iniciamos una transacción
             $this->conn->beginTransaction();
             
@@ -257,19 +271,43 @@ class DatabaseManager {
                     VALUES (:id_funcionalidad, :descripcion, :orden)
                 ");
                 
+                $criterio_error = false;
+                
                 foreach ($criterios as $index => $criterio) {
-                    $orden = $index + 1;
-                    $stmt_criterios->bindParam(':id_funcionalidad', $id_funcionalidad);
-                    $stmt_criterios->bindParam(':descripcion', $criterio);
-                    $stmt_criterios->bindParam(':orden', $orden);
-                    $stmt_criterios->execute();
+                    if (!empty(trim($criterio))) {
+                        $orden = $index + 1;
+                        $criterio_trim = trim($criterio);
+                        $stmt_criterios->bindParam(':id_funcionalidad', $id_funcionalidad);
+                        $stmt_criterios->bindParam(':descripcion', $criterio_trim);
+                        $stmt_criterios->bindParam(':orden', $orden);
+                        
+                        if (!$stmt_criterios->execute()) {
+                            $criterio_error = true;
+                            error_log("Error al insertar criterio: " . $criterio);
+                            break;
+                        }
+                    } else {
+                        $criterio_error = true;
+                        error_log("Error: Criterio vacío encontrado");
+                        break;
+                    }
+                }
+                
+                if ($criterio_error) {
+                    $this->conn->rollBack();
+                    return false;
                 }
                 
                 // Confirmamos la transacción
                 $this->conn->commit();
                 
                 // Ejecutamos el procedimiento almacenado para asignación automática
-                $this->conn->exec("CALL asignar_ing_funcionalidad(" . $id_funcionalidad . ")");
+                try {
+                    $this->conn->exec("CALL asignar_ing_funcionalidad(" . $id_funcionalidad . ")");
+                } catch (PDOException $e) {
+                    error_log("Advertencia: Error en asignación automática: " . $e->getMessage());
+                    // Continuamos aunque haya error en la asignación automática
+                }
                 
                 return true;
             } else {

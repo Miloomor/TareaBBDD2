@@ -581,11 +581,19 @@ if (isset($_GET['mensaje']) && isset($_GET['tipo'])) {
         // Función para agregar criterio de aceptación
         function agregarCriterio(containerId) {
             const container = document.getElementById(containerId);
+            if (!container) {
+                console.error('Contenedor no encontrado:', containerId);
+                return;
+            }
+            
+            // Calcular el número del siguiente criterio
+            const nextCriterioNum = container.childElementCount + 1;
+            
             const div = document.createElement('div');
             div.className = 'input-group mb-2';
             
             div.innerHTML = `
-                <input type="text" class="form-control" name="criterios[]" required>
+                <input type="text" class="form-control" name="criterios[]" placeholder="Criterio ${nextCriterioNum}" required>
                 <button type="button" class="btn btn-danger" onclick="eliminarCriterio(this)">
                     <i class="bi bi-trash"></i>
                 </button>
@@ -602,6 +610,12 @@ if (isset($_GET['mensaje']) && isset($_GET['tipo'])) {
             // Asegurarse de que queden al menos 3 criterios
             if (container.childElementCount > 3) {
                 container.removeChild(inputGroup);
+                
+                // Reordenar los placeholders de los criterios restantes
+                const inputs = container.querySelectorAll('input[name="criterios[]"]');
+                inputs.forEach((input, index) => {
+                    input.placeholder = `Criterio ${index + 1}`;
+                });
             } else {
                 alert('Debe haber al menos 3 criterios de aceptación.');
             }
